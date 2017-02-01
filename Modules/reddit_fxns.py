@@ -42,10 +42,10 @@ if __name__ == '__main__':
 from __main__ import R_BOT_USER, R_BOT_PASS, R_BOT_C_ID, R_BOT_SCRT, R_BOT_MAST, BATOTO_USR, BATOTO_PWD, characterLookup, Archives, batotoChapters, get, search, TRZRURL, WAKAURL
 import praw
 
-sub = "TsurezureTracker"
+sub = "manga"
 mySub = "TsurezureTracker"
 
-botFlair = "Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) [^(Request a lookup)](https://www.reddit.com/message/compose/?to=TsurezureTracker&subject=Lookup&message=find%20CHARACTER%20CHARACTER%20CHARACTER%20chapters) ^(Complaints? /r/"+mySub+")"
+botFlair = "Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) [^(Request a lookup here.)](https://www.reddit.com/message/compose/?to=TsurezureTracker&subject=Lookup&message=find%20CHARACTER%20CHARACTER%20CHARACTER%20chapters) ^(Complaints? /r/"+mySub+")"
 
 def startup():
     try:
@@ -107,7 +107,7 @@ def checkInbox(reddit):
             parser = "find (.*) chapters"
             if message.subject == "username mention":
                 parser = "u/"+R_BOT_USER+" "+parser
-            characters = search(parser,message.body.lower()).group(1).split(' ')
+            characters = search(parser.lower(),message.body.lower()).group(1).split(' ')
             previousInteractions = "I've done some digging, and this is what I've found:\n\n" + Archives.findChapters(characters,characterLookup)
             message.reply(greeting+previousInteractions+botFlair)
             print("Message delivered successfully")
