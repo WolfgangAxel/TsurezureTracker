@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  Archives.py
+#  reddit_fxns.py
 #  
 #  Copyright 2017 Keaton Brown <linux.keaton@gmail.com>
 #  
@@ -39,193 +39,86 @@
 if __name__ == '__main__':
     exit("Not a script")
 
-from __main__ import TRZRCNameCatcher, search, get, BS, batotoChapters, TRZRURL, WAKAURL
+from __main__ import R_BOT_USER, R_BOT_PASS, R_BOT_C_ID, R_BOT_SCRT, R_BOT_MAST, BATOTO_USR, BATOTO_PWD, characterLookup, Archives, batotoChapters, get, search, TRZRURL, WAKAURL
+import praw
 
-def addChapter(characterLookup,character,chapterMarkdown,botMode=False):
-    """
-    Adds the link markdown to the archive under a character's name
-    """
-    foundNew = False
-    for char in TRZRCNameCatcher:
-        if character.lower() in [ name.lower() for name in TRZRCNameCatcher[char] ]:
-            character = char
-            foundNew = True
-    if not foundNew:
-        if botMode:
-            raise Exception
-        nameList = [ name for name in TRZRCNameCatcher ]
-        print(character+" was not found in the list of characters. "
-        "Please choose the correct name below and press enter.")
-        for i,name in enumerate(nameList):
-            print(str(i)+". "+name)
-        print("Type 'NEW' to add a new main character.")
-        while True:
-            index = eval(input("-->"))
-            if type(index) == int:
-                character = nameList[index]
-                break
-            elif index == "NEW":
-                character = addMain()
-                break
-            print("Not a number or 'NEW'")
+sub = "manga"
+mySub = "TsurezureTracker"
+
+botFlair = "Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) [^(Request a lookup here.)](https://www.reddit.com/message/compose/?to=TsurezureTracker&subject=Lookup&message=find%20CHARACTER%20CHARACTER%20CHARACTER%20chapters) ^(Complaints? /r/"+mySub+")"
+
+def startup():
     try:
-        characterLookup[character].append(chapterMarkdown)
-    except:
-        characterLookup[character] = [ chapterMarkdown ]
-    return characterLookup
+        return praw.Reddit(client_id=R_BOT_C_ID,
+                            client_secret=R_BOT_SCRT,
+                            password=R_BOT_PASS,
+                            user_agent="Keeping track of Tsurezure Children chapters for /r/manga, hosted by /u/"+R_BOT_MAST,
+                            username=R_BOT_USER)
+    except Exception as e:
+        exit("Reddit authentication failed. Check for correct credentials and internet connection\n\nMore details: "+str(e.args()))
 
-def addMain():
+def checkNewChaps(reddit):
     """
-    Add a main character to the Name Catcher
+    Check /r/manga for a new chapter thread
     """
-    while True:
-        print("Please type the family name of the character:")
-        familyName = input("-->")
-        print("Is '"+famileName+"' correct? (y/n)")
-        confirm = input("-->")
-        if confirm.lower() == "y":
-            familyName = familyName.capitalize()
-            break
-        print("Confirm failed")
-    while True:
-        print("Please type the given name of the character:")
-        givenName = input("-->")
-        print("Is '"+givenName+"' correct? (y/n)")
-        confirm = input("-->")
-        if confirm.lower() == "y":
-            givenName = givenName.sapitalize()
-            break
-        print("Confirm failed")
-    while True:
-        print("The dictionary entry will look like this:\n"
-              "'"+familyName+"':['"+familyName+"','"+givenName+"']\n"
-              "Is this correct? (y/n)")
-        confirm = input("-->")
-        if confirm.lower() == 'y':
-            TRZRCNameCatcher[familyName] = [ familyName, givenName ]
-            with open(myPath+"nameArchive.pydic","w") as arc:
-                arc.write(str(TRZRCNameCatcher))
-            return familyName
-        elif confirm.lower() == "n":
-            return addMain()
+    for submission in reddit.subreddit(sub).new(limit=100):
+        try:
+            parsed = search("\[DISC\] (Wakabayashi Toshiya's 4-koma Collection|Tsurezure Children)",submission.title).group(1)
+        except:
+            continue
+        if R_BOT_USER.lower() in [ comment.author.name.lower() for comment in submission.comments ]:
+            # Don't comment if we've commented in that thread before
+            continue
+        if not "bato.to" in submission.url:
+            # Gotta be Batoto, since that's where we scrape for characters
+            print("Found a discussion thread, but the link wasn't Batoto.")
+            continue
+        print("----------\nFound a new chapter\n----------")
+        if parsed.lower() == "tsurezure children":
+            soup = batotoChapters(TRZRURL)[0]
         else:
-            print("Confirmation failed")
-
-def manualCharacters(name,URL):
-    """
-    Manually define which characters appear in a chapter
-    """
-    while True:
-        print("No character information found in the title of "+name+".\n"+URL)
-        names = input("Enter the names of all main characters involved in this chapter with spaces in between each name.\n-->")
-        names = names.split(" ")
-        print("You entered the following for all main characters:")
-        for char in names:
-            print("  "+char)
-        confirm = input("Is this correct? (y/n)\n-->")
-        if confirm.lower() == "y":
-            break
-        print("Confirmation failed. Trying again.")
-    return names
-
-def titleParse(chName):
-    """
-    Tries to strip the characters from a title.
-    Raises Exceptions when not found, so use with try statements
-    and alternative means to define characters when it fails.
-    """
-    try:
-        characters = search(".*\((.*)\)",chName).group(1)
-        print(characters.lower())
-        if " " in characters:
-            if not "love master" in characters.lower():
-                # Not found, use alternate method
-                raise Exception
-            else:
-                # Fucking LoveMaster ruining everything again.
-                characters = characters.lower().replace("love master","lovemaster")
-        if characters.lower() == "omake":
-            # Not found, use alternate method
-            raise Exception
-        if characters.lower() == "tankoubon":
-            # Not found, use alternate method
-            raise Exception
-        # Found
-        characters = characters.split("/")
-        return characters
-    except:
-        # Not found, use alternate method
-        raise Exception
-
-def findChapters(charList,characterLookup):
-    """
-    Pull all chapters common between a number of characters, or all
-    chapters with that character in it.
-    """
-    # Check if a redditor sent just "CHARACTER CHARACTER...." any number of times
-    if ((charList[1:] == charList[:-1]) and (charList[0] == 'character')):
-        return "* You're not as funny as you think you are\n\n"
-    # Single
-    if len(charList) == 1:
-        for character in TRZRCNameCatcher:
-            if charList[0].lower() in [ char.lower() for char in TRZRCNameCatcher[character] ]:
-                linkString = character+" has appeared previously in:\n\n"
-                for link in characterLookup[character]:
-                    linkString += link+"\n"
-                return linkString
-        raise Exception
-    # Multiple
-    multi = []
-    for name in charList:
-        for character in TRZRCNameCatcher:
-            if name.lower() in [ char.lower() for char in TRZRCNameCatcher[character] ]:
-                multi.append([character,characterLookup[character]])
-    if len(multi) != len(charList):
-        raise Exception
-    first = multi[0][1]
-    sharedLinks = []
-    for links in [character[1] for character in multi[1:]][0]:
-        for link in first:
-            if link in links:
-                sharedLinks.append(link)
-    linkString = ''
-    for name in [a[0] for a in multi]:
-        linkString += name+", "
-    linkString = linkString[:-2]+" have appeared together previously in:\n\n"
-    if sharedLinks == []:
-        return "* None"
-    else:
-        for link in sharedLinks:
-            linkString += link + "\n"
-        return linkString+"\n\n"
-
-def buildArchive(cookies):
-    """
-    Generate a new chapter archive using chapters on Batoto.
-    Note: This takes a looooooong time.
-    """
-    characterLookup={}
-    for soup in batotoChapters([TRZRURL, WAKAURL]):
-        for row in soup:
-            chapterURL=row.td.a['href']
-            columns = row.find_all('td')
-            name = columns[0].img.next_sibling.strip()
-            # Grab just the chapter title first,
-            # then check for character names.
-            # Ask for character names if not found.
-            chName = search(".*: (.*)",name).group(1)
-            try:
-                characters = titleParse(chName)
-            except:
-                characters = manualCharacters(name,chapterURL)
-            infoString = ""
+            soup = batotoChapters(WAKAURL)[0]
+        chapterURL=soup[0].td.a['href']
+        columns = soup[0].find_all('td')
+        name = columns[0].img.next_sibling.strip()
+        chName = search(".*: (.*)",name).group(1)
+        try:
+            characters = Archives.titleParse(chName)
             for character in characters:
-                characterLookup = addChapter(characterLookup,character,"* ["+name.replace("[","(").replace("]",")")+"]("+chapterURL+")")
-                infoString += character+", "
-            print(infoString[:-2]+" appear in "+name+"\n----------")
-    saveChapterArchive(characterLookup)
-    return characterLookup
+                characterLookup = addChapter(characterLookup,character,"* ["+name.replace("[","(").replace("]",")")+"]("+chapterURL+")",botMode=True)
+            Archives.saveChapterArchive(characterLookup)
+            previousInteractions = "I've done some digging, and this is what I've found:\n\n" + Archives.findChapters(characters,characterLookup)
+        except:
+            msg="There's a new chapter of "+parsed+", but the title parse failed. [Check to see if I need to be called to the thread.]("+submission.shortlink+")"
+            reddit.redditor(R_BOT_MAST).message("Failed to find characters",msg)
+            print("Error with chapter. Message sent")
+            continue
+        submission.reply("Hello, /r/"+sub+"!\n\n"+previousInteractions+botFlair)
+        print("Successful reply. Good job, me!")
 
-def saveChapterArchive(characterLookup):
-    with open(join(myPath,"Archives","chapterArchive.pydic"),"w") as f:
-        f.write(str(characterLookup))
+def checkInbox(reddit):
+    for message in reddit.inbox.unread():
+        try:
+            redditor = "/u/"+message.author.name
+        except:
+            redditor = "/u/"+message.author
+        print("Got a message from "+redditor)
+        greeting = "Hello "+redditor+"!\n\n"
+        message.mark_read()
+        try:
+            parser = "find (.*) chapters"
+            if message.subject == "username mention":
+                parser = "u/"+R_BOT_USER+" "+parser
+            characters = search(parser.lower(),message.body.lower()).group(1).split(' ')
+            previousInteractions = "I've done some digging, and this is what I've found:\n\n" + Archives.findChapters(characters,characterLookup)
+            message.reply(greeting+previousInteractions+botFlair)
+            print("Message delivered successfully")
+        except:
+            print("Message parsing failed")
+            if message.subject == "username mention":
+                print("Was a mention, no message sent")
+                continue
+            message.reply(greeting+"I was unable to read your message properly. "+
+                          "Please check the current archive at /r/"+mySub+" for a list of acceptable names, "+
+                          "and list names using only spaces in between like so:\n\n    find Gouda Kamine chapters"+botFlair)
+            print("Failure notification sent")
