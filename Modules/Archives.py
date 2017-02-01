@@ -136,7 +136,6 @@ def titleParse(chName):
     """
     try:
         characters = search(".*\((.*)\)",chName).group(1)
-        print(characters.lower())
         if " " in characters:
             if not "love master" in characters.lower():
                 # Not found, use alternate method
@@ -162,6 +161,9 @@ def findChapters(charList,characterLookup):
     Pull all chapters common between a number of characters, or all
     chapters with that character in it.
     """
+    # Check if a redditor sent just "CHARACTER CHARACTER...." any number of times
+    if ((charList[1:] == charList[:-1]) and (charList[0] == 'character')):
+        return "* You're not as funny as you think you are\n\n"
     # Single
     if len(charList) == 1:
         for character in TRZRCNameCatcher:
@@ -185,13 +187,13 @@ def findChapters(charList,characterLookup):
         for link in first:
             if link in links:
                 sharedLinks.append(link)
+    linkString = ''
+    for name in [a[0] for a in multi]:
+        linkString += name+", "
+    linkString = linkString[:-2]+" have appeared together previously in:\n\n"
     if sharedLinks == []:
         return "* None"
     else:
-        linkString = ''
-        for name in [a[0] for a in multi]:
-            linkString += name+", "
-        linkString = linkString[:-2]+" have appeared together previously in:\n\n"
         for link in sharedLinks:
             linkString += link + "\n"
         return linkString+"\n\n"
