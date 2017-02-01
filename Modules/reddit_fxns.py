@@ -120,5 +120,5 @@ def checkInbox(reddit):
                 continue
             message.reply(greeting+"I was unable to read your message properly. "+
                           "Please check the current archive at /r/"+mySub+" for a list of acceptable names, "+
-                          "and list names using only spaces in between like so:\n\n    find Gouda Kamine chapters"+botFlair)
+                          "and list names using only spaces in between like so:\n\n    find Gouda Kamine chapters\n\n"+botFlair)
             print("Failure notification sent")
