@@ -100,8 +100,12 @@ def checkNewChaps(reddit):
 
 def checkInbox(reddit):
     for message in reddit.inbox.unread():
-        print("Got a message from /u/"+message.author.name)
-        greeting = "Hello /u/"+message.author.name+"!\n\n"
+        try:
+            redditor = "/u/"+message.author.name
+        except:
+            redditor = "/u/"+message.author
+        print("Got a message from "+redditor)
+        greeting = "Hello "+redditor+"!\n\n"
         message.mark_read()
         try:
             parser = "find (.*) chapters"
