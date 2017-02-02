@@ -109,7 +109,7 @@ def checkInbox(reddit):
             parser = "find (.*) chapters"
             if message.subject == "username mention":
                 parser = "u/"+R_BOT_USER+" "+parser
-            characters = search(parser.lower(),message.body.lower()).group(1).split(' ')
+            characters = search(parser.lower(),message.body.lower()).group(1).replace("love master","lovemaster").split(' ')
             previousInteractions = "I've done some digging, and this is what I've found:\n\n" + Archives.findChapters(characters,characterLookup)
             message.reply(greeting+previousInteractions+botFlair)
             print("Message delivered successfully")
