@@ -171,7 +171,7 @@ def findChapters(charList,characterLookup):
                 linkString = character+" has appeared previously in:\n\n"
                 for link in characterLookup[character]:
                     linkString += link+"\n"
-                return linkString
+                return linkString+"\n\n"
         raise Exception
     # Multiple
     multi = []
