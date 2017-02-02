@@ -184,7 +184,7 @@ def findChapters(charList,characterLookup):
         raise Exception
     # Check to see if it's the same name for all, repeat function if so
     if multi[1:] == multi[:-1]:
-        return findChapters([multi[0]],characterLookup)
+        return findChapters([multi[0][0]],characterLookup)
     # Remove duplicates if any
     multi = [ char for i,char in enumerate(sorted(multi)) if char != sorted(multi)[i-1] ]
     # Honestly, I don't know how this works but it does? And I wrote it myself without Googling so fuck yeah.
