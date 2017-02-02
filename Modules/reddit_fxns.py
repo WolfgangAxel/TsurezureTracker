@@ -45,7 +45,7 @@ import praw
 sub = "manga"
 mySub = "TsurezureTracker"
 
-botFlair = "Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) [^(Request a lookup here.)](https://www.reddit.com/message/compose/?to=TsurezureTracker&subject=Lookup&message=find%20CHARACTER%20CHARACTER%20CHARACTER%20chapters) ^(Complaints? /r/"+mySub+")"
+botFlair = "Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) ^(Request a lookup from me )[^(here,)](https://www.reddit.com/message/compose/?to=TsurezureTracker&subject=Lookup&message=find%20CHARACTER%20CHARACTER%20CHARACTER%20chapters)^( or look through yourself )[^(here.)](http://bato.to/forums/topic/23170-relationship-continuation-list-by-moredrowsy/) ^(Complaints? /r/"+mySub+")"
 
 def startup():
     try:
