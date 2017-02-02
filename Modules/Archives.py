@@ -180,7 +180,14 @@ def findChapters(charList,characterLookup):
             if name.lower() in [ char.lower() for char in TRZRCNameCatcher[character] ]:
                 multi.append([character,characterLookup[character]])
     if len(multi) != len(charList):
+        # There was a name not found
         raise Exception
+    # Check to see if it's the same name for all, repeat function if so
+    if multi[1:] == multi[:-1]:
+        return findChapters([multi[0]],characterLookup)
+    # Remove duplicates if any
+    multi = [ char for i,char in enumerate(sorted(multi)) if char != sorted(multi)[i-1] ]
+    # Honestly, I don't know how this works but it does? And I wrote it myself without Googling so fuck yeah.
     first = multi[0][1]
     sharedLinks = []
     for links in [character[1] for character in multi[1:]][0]:
