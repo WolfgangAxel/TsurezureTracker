@@ -162,7 +162,12 @@ if "--add" in args:
 import reddit_fxns
 
 reddit = reddit_fxns.startup()
+print("Bot initialized successfully. Starting monitoring.")
 while True:
-    reddit_fxns.checkNewChaps(reddit)
-    reddit_fxns.checkInbox(reddit)
-    sleep(300)
+    try:
+        reddit_fxns.checkNewChaps(reddit)
+        reddit_fxns.checkInbox(reddit)
+        sleep(300)
+    except Exception as e:
+        print("Fatal error occurred:\n"+str(e.args)+"\nTrying again in 1 minute")
+        sleep(60)
