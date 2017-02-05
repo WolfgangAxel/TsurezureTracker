@@ -39,21 +39,18 @@
 if __name__ == '__main__':
     exit("Not a script")
 
-from __main__ import TRZRCNameCatcher, search, get, BS, batotoChapters, TRZRURL, WAKAURL
+import __main__
 
 def addChapter(characterLookup,character,chapterMarkdown,botMode=False):
     """
     Adds the link markdown to the archive under a character's name
     """
-    foundNew = False
-    for char in TRZRCNameCatcher:
-        if character.lower() in [ name.lower() for name in TRZRCNameCatcher[char] ]:
-            character = char
-            foundNew = True
-    if not foundNew:
+    try:
+        character = findNames(character)
+    except:
         if botMode:
             raise Exception
-        nameList = [ name for name in TRZRCNameCatcher ]
+        nameList = [ name for name in __main__.TRZRCNameCatcher ]
         print(character+" was not found in the list of characters. "
         "Please choose the correct name below and press enter.")
         for i,name in enumerate(nameList):
@@ -65,16 +62,29 @@ def addChapter(characterLookup,character,chapterMarkdown,botMode=False):
                 character = nameList[index]
                 break
             elif index == "NEW":
-                character = addMain()
+                character = manualAddMain()
                 break
             print("Not a number or 'NEW'")
     try:
-        characterLookup[character].append(chapterMarkdown)
+        characterLookup[character] = [ chapterMarkdown ]+characterLookup[character]
     except:
+        # New character
         characterLookup[character] = [ chapterMarkdown ]
+    if botMode:
+        saveChapterArchive(characterLookup)
     return characterLookup
 
-def addMain():
+def addMain(familyName, givenName, botMode=False):
+    """
+    Add a main character to the archive
+    """
+    __main__.TRZRCNameCatcher[familyName] = [ familyName, givenName ]
+    with open(__main__.join(__main__.myPath,"Archives","nameArchive.pydic"),"w") as arc:
+        arc.write(str(__main__.TRZRCNameCatcher))
+    if botMode:
+        return "Added "+familyName+" "+givenName+" as a main character.\n\n****\n\n"
+
+def manualAddMain():
     """
     Add a main character to the Name Catcher
     """
@@ -102,12 +112,10 @@ def addMain():
               "Is this correct? (y/n)")
         confirm = input("-->")
         if confirm.lower() == 'y':
-            TRZRCNameCatcher[familyName] = [ familyName, givenName ]
-            with open(myPath+"nameArchive.pydic","w") as arc:
-                arc.write(str(TRZRCNameCatcher))
+            addMain(familyName, givenName)
             return familyName
         elif confirm.lower() == "n":
-            return addMain()
+            return manualAddMain()
         else:
             print("Confirmation failed")
 
@@ -135,7 +143,7 @@ def titleParse(chName):
     and alternative means to define characters when it fails.
     """
     try:
-        characters = search(".*\((.*)\)",chName).group(1)
+        characters = __main__.search(".*\((.*)\)",chName).group(1)
         if " " in characters:
             if not "love master" in characters.lower():
                 # Not found, use alternate method
@@ -156,6 +164,16 @@ def titleParse(chName):
         # Not found, use alternate method
         raise Exception
 
+def findNames(character):
+    """
+    Returns the 'main' name for a character
+    """
+    for char in __main__.TRZRCNameCatcher:
+        if character.lower() in [name.lower() for name in __main__.TRZRCNameCatcher[char]]:
+            return char
+    print("Lookup of "+character+" failed.")
+    raise Exception
+
 def findChapters(charList,characterLookup):
     """
     Pull all chapters common between a number of characters, or all
@@ -164,46 +182,39 @@ def findChapters(charList,characterLookup):
     # Check if a redditor sent just "CHARACTER CHARACTER...." any number of times
     if ((charList[1:] == charList[:-1]) and (charList[0] == 'character')):
         return "* You're not as funny as you think you are\n\n"
-    # Single
-    if len(charList) == 1:
-        for character in TRZRCNameCatcher:
-            if charList[0].lower() in [ char.lower() for char in TRZRCNameCatcher[character] ]:
-                linkString = character+" has appeared previously in:\n\n"
-                for link in characterLookup[character]:
-                    linkString += link+"\n"
-                return linkString+"\n\n"
-        raise Exception
-    # Multiple
-    multi = []
-    for name in charList:
-        for character in TRZRCNameCatcher:
-            if name.lower() in [ char.lower() for char in TRZRCNameCatcher[character] ]:
-                multi.append([character,characterLookup[character]])
-    if len(multi) != len(charList):
-        # There was a name not found
-        raise Exception
-    # Check to see if it's the same name for all, repeat function if so
-    if multi[1:] == multi[:-1]:
-        return findChapters([multi[0][0]],characterLookup)
+    linkString = ""
+    for i,character in enumerate(charList):
+        charList[i] = findNames(character)
+        charList[i] = [charList[i],characterLookup[charList[i]]]
     # Remove duplicates if any
-    multi = [ char for i,char in enumerate(sorted(multi)) if char != sorted(multi)[i-1] ]
-    # Honestly, I don't know how this works but it does? And I wrote it myself without Googling so fuck yeah.
-    first = multi[0][1]
-    sharedLinks = []
-    for links in [character[1] for character in multi[1:]][0]:
-        for link in first:
-            if link in links:
-                sharedLinks.append(link)
-    linkString = ''
-    for name in [a[0] for a in multi]:
-        linkString += name+", "
-    linkString = linkString[:-2]+" have appeared together previously in:\n\n"
-    if sharedLinks == []:
-        return "* None"
+    # Honestly, I don't know exactly how this works but it does? And I wrote it myself without Googling so fuck yeah.
+    testCharList = [ char for i,char in enumerate(sorted(charList)) if char != sorted(charList)[i-1] ]
+    if testCharList != []:
+        charList = testCharList
     else:
-        for link in sharedLinks:
-            linkString += link + "\n"
-        return linkString+"\n\n"
+        # All items were removed in the test, so only one character is there.
+        charList = [ charList[0] ]
+    for character in [ name[0] for name in charList ]:
+        linkString += character+", "
+    linkString = linkString[:-2]
+    if len(charList) == 1:
+        linkString += " has appeared previously in:\n\n"
+        for link in charList[0][1]:
+            linkString += link+"\n"
+    else:
+        linkString += " have appeared together previously in:\n\n"
+        first = charList[0][1]
+        sharedLinks = []
+        for links in [character[1] for character in charList[1:]][0]:
+            for link in first:
+                if link in links:
+                    sharedLinks.append(link)
+        if sharedLinks == []:
+            return "* None =(\n"
+        else:
+            for link in sharedLinks:
+                linkString += link + "\n"
+    return linkString+"\n"
 
 def buildArchive(cookies):
     """
@@ -211,7 +222,7 @@ def buildArchive(cookies):
     Note: This takes a looooooong time.
     """
     characterLookup={}
-    for soup in batotoChapters([TRZRURL, WAKAURL]):
+    for soup in __main__.batotoChapters([__main__.TRZRURL, __main__.WAKAURL]):
         for row in soup:
             chapterURL=row.td.a['href']
             columns = row.find_all('td')
@@ -219,7 +230,7 @@ def buildArchive(cookies):
             # Grab just the chapter title first,
             # then check for character names.
             # Ask for character names if not found.
-            chName = search(".*: (.*)",name).group(1)
+            chName = __main__.search(".*: (.*)",name).group(1)
             try:
                 characters = titleParse(chName)
             except:
@@ -233,5 +244,5 @@ def buildArchive(cookies):
     return characterLookup
 
 def saveChapterArchive(characterLookup):
-    with open(join(myPath,"Archives","chapterArchive.pydic"),"w") as f:
+    with open(__main__.join(__main__.myPath,"Archives","chapterArchive.pydic"),"w") as f:
         f.write(str(characterLookup))
