@@ -159,7 +159,7 @@ def checkNewChaps(reddit):
     """
     for submission in reddit.subreddit(sub).new(limit=100):
         try:
-            parsed = __main__.search("\[DISC\] (Wakabayashi Toshiya's 4-koma Collection|Tsurezure Children)",submission.title).group(1)
+            parsed = __main__.search("\[disc\] (wakabayashi toshiya's 4-koma collection|tsurezure children)",submission.title.lower()).group(1)
         except:
             continue
         if __main__.R_BOT_USER.lower() in [ comment.author.name.lower() for comment in submission.comments ]:
