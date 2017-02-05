@@ -38,6 +38,7 @@ from re import search
 from sys import argv,path
 from os.path import join
 from time import sleep
+from time import strftime as st
 
 args = [arg for arg in argv]
 myPath = __file__.replace("TsurezureTracker.py","")
@@ -99,15 +100,22 @@ def getCookies(username,password):
     pass_hash = firstPost.cookies['pass_hash']
     return {"cookie":cookie,"member_id":member_id,"pass_hash":pass_hash}
 
-def printCurrentArchive():
+def printCurrentArchive(botMode = False):
+    assembly = ""
     for character in sorted(characterLookup):
-        print(character+"\n\n* Call names")
+        assembly += character+"\n\n* Call names\n"
         for name in TRZRCNameCatcher[character]:
-            print(" * "+name)
-        print("* Chapters")
+            assembly += " * "+name+"\n"
+        assembly += "* Chapters\n"
         for chapter in characterLookup[character]:
-            print(" "+chapter)
-        print()
+            assembly += " "+chapter+"\n"
+        assembly += "\n"
+    if botMode:
+        return assembly
+    print(assembly)
+
+def printTime():
+    return st("    %D, %H:%M-\n")
 
 fileChecker(myPath)
 with open(myPath+"credentials.txt","r") as creds:
@@ -169,5 +177,5 @@ while True:
         reddit_fxns.checkInbox(reddit)
         sleep(300)
     except Exception as e:
-        print("Fatal error occurred:\n"+str(e.args)+"\nTrying again in 1 minute")
+        print(printTime()+"Fatal error occurred:\n"+str(e.args)+"\nTrying again in 1 minute")
         sleep(60)
