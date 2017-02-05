@@ -42,7 +42,7 @@ if __name__ == '__main__':
 import __main__
 import praw
 
-sub = "roboruri"
+sub = "manga"
 mySub = "TsurezureTracker"
 
 botFlair =("Enjoy!\n\n****\n\n[^(I am a bot.)](https://github.com/WolfgangAxel/TsurezureTracker) "+
