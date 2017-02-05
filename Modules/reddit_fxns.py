@@ -244,6 +244,8 @@ def newSticky(admin=False):
             stuckPost = botSub.sticky(number=stickyIndex)
             if "current archive as of " in stuckPost.title.lower():
                 stuckPost.mod.remove()
+                break
+            stickyIndex += 1
     except:
         print("No previous sticky found. Oh well.")
     new = botSub.submit("Current Archive as of "+__main__.st("%m-%d-%y"),selftext=__main__.printCurrentArchive(botMode=True))
