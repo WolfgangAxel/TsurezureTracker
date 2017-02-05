@@ -236,13 +236,18 @@ def newSticky(admin=False):
     """
     Generate a new archive sticky on mySub
     """
-    mySub = __main__.reddit.subreddit(mySub)
+    botSub = __main__.reddit.subreddit(mySub)
     # Unset the current sticky
     try:
-        mySub.sticky().mod.sticky(state=False)
+        stickyIndex = 1
+        while True:
+            stuckPost = botSub.sticky(number=stickyIndex)
+            if "current archive as of " in stuckPost.title.lower():
+                stuckPost.mod.remove()
     except:
         print("No previous sticky found. Oh well.")
-    new = mySub.submit("Current Archive as of "+__main__.st("%m-%d-%y"),selftext=__main__.printCurrentArchive(botMode=True))
-    new.mod.sticky()
+    new = botSub.submit("Current Archive as of "+__main__.st("%m-%d-%y"),selftext=__main__.printCurrentArchive(botMode=True))
+    new.mod.sticky(bottom=False)
+    new.mod.lock()
     if admin:
         return "New sticky made successfully\n\n****\n\n"
