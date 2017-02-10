@@ -209,15 +209,30 @@ def checkInbox(reddit):
                 message.mark_read()
                 continue
             except Exception as e:
-                print("Errors:\n\n"+str(e.args)+"\n\n")
+                if e.args:
+                    print("Errors:\n\n"+str(e.args)+"\n\n")
                 print("Admin function call failed. Proceeding with regular lookup.")
         greeting = "Hello "+redditor+"!\n\n"
+        previousInteractions = ""
         try:
-            parser = "find (.*) chapters"
-            if message.subject == "username mention":
-                parser = "u/"+__main__.R_BOT_USER+" "+parser
-            characters = __main__.search(parser.lower(),message.body.lower()).group(1).replace("love master","lovemaster").split(' ')
-            previousInteractions = "I've done some digging, and this is what I've found:\n\n" + __main__.Archives.findChapters(characters,__main__.characterLookup)
+            request = __main__.findall("find (.*?) chapters",message.body.lower())
+            if request == []:
+                raise Exception
+            if len(request) == 1:
+                characters = request[0].replace("love master","lovemaster").split(' ')
+                previousInteractions += "I've done some digging, and this is what I've found:\n\n" + __main__.Archives.findChapters(characters,__main__.characterLookup)
+            else:
+                fails = 0
+                for req in request:
+                    characters = req.replace("love master","lovemaster").split(' ')
+                    try:
+                        previousInteractions += "****\n\n" + __main__.Archives.findChapters(characters,__main__.characterLookup)
+                    except:
+                        fails += 1
+                        previousInteractions += "****\n\nThere was an error with a character name in "+req.capitalize()
+                if fails == len(request):
+                    raise Exception
+                previousInteractions = "I've done some digging, and this is what I've found:\n\n" + previousInteractions[6:]
             message.reply(greeting+previousInteractions+botFlair)
             print("Message delivered successfully")
         except:
