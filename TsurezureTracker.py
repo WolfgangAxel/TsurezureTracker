@@ -34,7 +34,7 @@
 
 from bs4 import BeautifulSoup as BS
 from requests import get,post
-from re import search
+from re import search,findall
 from sys import argv,path
 from os.path import join
 from time import sleep
