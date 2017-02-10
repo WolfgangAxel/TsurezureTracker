@@ -229,7 +229,7 @@ def checkInbox(reddit):
                         previousInteractions += "****\n\n" + __main__.Archives.findChapters(characters,__main__.characterLookup)
                     except:
                         fails += 1
-                        previousInteractions += "****\n\nThere was an error with a character name in "+req.capitalize()
+                        previousInteractions += "****\n\nThere was an error with a character name in "+req.capitalize()+"\n\n"
                 if fails == len(request):
                     raise Exception
                 previousInteractions = "I've done some digging, and this is what I've found:\n\n" + previousInteractions[6:]
